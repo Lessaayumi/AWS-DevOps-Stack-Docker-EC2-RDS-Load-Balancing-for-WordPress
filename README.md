@@ -13,14 +13,23 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 4. [Criação da Infraestrutura na AWS](#criação-da-infraestrutura-na-aws)
 
   4.1 [Criar VPC;](#Criar-VPC;)
+  
   4.2 [Criar Gateway NAT;](#Criat-Gateway-NAT;)
+  
   4.3 [Editar Tabela de Rotas;](#Editar-Tabela-de-Rotas;)
+  
   4.4 [Criar Security Groups;](#Criar-Security-Groups:)
+  
   4.5 [Criar RDS;](#Criar-RDS)
+  
   4.6 [Criar EFS;](#Criar-EFS)
+  
   4.7 [Criar Load Balancer;](#Criar-Load-Balancer;)
+  
   4.8 [Criar Auto Scaling;](#Criar-Auto-Scaling;)
+  
   4.9 [Criar Template;](#Criar-Template;)
+  
   4.10 [Teste de Funcionamento.](#Teste-de-funcionamento)
    
 5. [Considerações Finais](#considerações-finais)
