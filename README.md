@@ -36,7 +36,7 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 
 6. [Referências](#referências)
 
-```
+
 # 1. Resumo
 
 <div>
