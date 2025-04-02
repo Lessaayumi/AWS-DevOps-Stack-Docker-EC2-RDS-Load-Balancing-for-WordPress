@@ -106,7 +106,6 @@ O primeiro passo do nosso projeto, é a criação de uma VPC.
 
    No **Painel da VPC**, localizado no menu lateral esquerdo, clique na opção **"Gateways NAT"** e, em seguida, selecione **"Criar gateway NAT"**. No campo de nome, defina um identificador para o gateway. Escolha a **sub-rede pública** correspondente e mantenha a configuração padrão **"Público"** no campo **"Tipo de conectividade"**. Para concluir o processo, clique na opção **"Alocar IP elástico"**.
 
-   ![Image](https://github.com/user-attachments/assets/b5518534-bc79-4c88-899a-47c359d4707f)
 
 - sgGroup-loadbalancer:
    HTTP / HTTPS => IPV4
@@ -134,9 +133,13 @@ O Amazon RDS (Relational Database Service) facilita a configuração, manutenç�
 - Vá em serviço RDS e acesse a aba "Grupos de sub-redes"
 - Clicar em Criar Grupo de sub-redes
 - Informações
+
     Nome do Grupo: ___________
+  
     Descrição: _____________
+  
     VPC: Selecione a VPC que você criou
+  
 - Selecionar as zonas de disponibilidas, em seguida, selecionar sub-redes privadas
 - Criar Grupo
 
