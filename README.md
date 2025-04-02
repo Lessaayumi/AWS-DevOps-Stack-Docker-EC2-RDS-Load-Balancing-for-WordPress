@@ -12,25 +12,25 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 
 4. [Criação da Infraestrutura na AWS](#criação-da-infraestrutura-na-aws)
 
-  4.1 [Criar VPC;](#Criar-VPC;)
+4.1 [Criar VPC;](#Criar-VPC;)
   
-  4.2 [Criar Gateway NAT;](#Criat-Gateway-NAT;)
+4.2 [Criar Gateway NAT;](#Criat-Gateway-NAT;)
   
-  4.3 [Editar Tabela de Rotas;](#Editar-Tabela-de-Rotas;)
+4.3 [Editar Tabela de Rotas;](#Editar-Tabela-de-Rotas;)
   
-  4.4 [Criar Security Groups;](#Criar-Security-Groups:)
+4.4 [Criar Security Groups;](#Criar-Security-Groups:)
   
-  4.5 [Criar RDS;](#Criar-RDS)
+4.5 [Criar RDS;](#Criar-RDS)
   
-  4.6 [Criar EFS;](#Criar-EFS)
+4.6 [Criar EFS;](#Criar-EFS)
   
-  4.7 [Criar Load Balancer;](#Criar-Load-Balancer;)
+4.7 [Criar Load Balancer;](#Criar-Load-Balancer;)
   
-  4.8 [Criar Auto Scaling;](#Criar-Auto-Scaling;)
+4.8 [Criar Auto Scaling;](#Criar-Auto-Scaling;)
   
-  4.9 [Criar Template;](#Criar-Template;)
+4.9 [Criar Template;](#Criar-Template;)
   
-  4.10 [Teste de Funcionamento.](#Teste-de-funcionamento)
+4.10 [Teste de Funcionamento.](#Teste-de-funcionamento)
    
 5. [Considerações Finais](#considerações-finais)
 
@@ -104,8 +104,6 @@ A escalabilidade foi um fator essencial no projeto, sendo implementado um Auto S
 A infraestrutura proposta para o deploy do WordPress na AWS segue boas práticas de escalabilidade, segurança e automação. A instância EC2 é configurada automaticamente via User Data (user_data.sh) para instalar Docker ou Containerd, garantindo um ambiente replicável. O WordPress roda em um container, enquanto o banco de dados é gerenciado pelo AWS RDS (MySQL), assegurando persistência e desempenho.
 Para armazenar arquivos estáticos, utiliza-se o AWS EFS, permitindo compartilhamento entre múltiplas instâncias. O tráfego de rede é gerenciado por um Classic Load Balancer (CLB), evitando a exposição direta do IP público e distribuindo conexões para maior disponibilidade. A infraestrutura é protegida por Security Groups, garantindo acesso controlado.
 
-</div>
-
    # 4.1 Criar VPC;
 
 <div>
@@ -172,6 +170,8 @@ Antes de prosseguir, decida se utilizará um **Bastion Host (BH)**. Caso opte po
 - Certifique-se de **associar cada Security Group à VPC criada anteriormente**.  
 - Os nomes e descrições dos Security Groups podem ser personalizados conforme sua preferência.  
 - As regras de entrada e saída devem seguir as configurações indicadas nas imagens de referência.
+
+</div>
 
 </div>
    
