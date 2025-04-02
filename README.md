@@ -378,6 +378,30 @@ EOF
 
 </div>
 
+# 5. Considerações finais
+
+<div>
+<details align="left">
+    <summary></summary>
+
+Este projeto demonstrou a implementação de uma infraestrutura escalável e altamente disponível para a hospedagem do WordPress na AWS, utilizando serviços essenciais como EC2, RDS, EFS e Load Balancer. Através da automação com *user_data.sh*, garantimos uma configuração eficiente e reproduzível, facilitando a implantação do ambiente. Além disso, a utilização do Docker e Docker Compose permitiu a criação e gerenciamento simplificado dos containers, garantindo portabilidade e flexibilidade. Com a configuração de segurança adequada, incluindo grupos de segurança bem definidos e a segmentação da rede em sub-redes públicas e privadas, reforçamos a proteção dos serviços. Por fim, a implementação do Auto Scaling assegura a escalabilidade do ambiente, garantindo que a aplicação possa lidar com variações de tráfego de forma eficiente e confiável.
+
+</div>
+
+# 6. Referências
+
+<div>
+<details align="left">
+    <summary></summary>
+
+https://docs.aws.amazon.com/efs/latest/ug/API_Operations.html - Acessso 30 de Março de 2025.
+
+https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html - Acesso 30 de Março de 2025.
+
+</div>
+
+
+
 
 
 
