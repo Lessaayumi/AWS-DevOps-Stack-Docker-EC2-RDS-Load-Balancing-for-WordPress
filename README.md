@@ -1,4 +1,4 @@
-# AWS DevOps Stack: Docker, EC2, RDS and Load Balancing for WordPress.
+# AWS DevOps Stack: Docker, EC2, RDS and Load Balancing for WordPress. (NOVO USANDO OQUE O DAVI MANDOU, UNICO JEITO FOI POR A PORRA DE BAST HOST E REPLICAR A INSTANCIA, ESTA FALTANDO A MERDA DAS IMAGENS E A PORRA DO CLOUD WATCH QUE NÃO FUNCIONA AGORA)
 
 Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (MySQL), EFS e Classic Load Balancer. O *user_data.sh* automatiza a configuração, garantindo escalabilidade e alta disponibilidade. A abordagem segue boas práticas de DevOps, permitindo implantação eficiente e reprodutível.
 
@@ -11,26 +11,6 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 3. [Arquitetura do Projeto e Tecnologias](#arquitetura-do-projeto-e-tecnologias)
 
 4. [Criação da Infraestrutura na AWS](#criação-da-infraestrutura-na-aws)
-
-4.1 [Criar VPC;](#Criar-VPC;)
-  
-4.2 [Criar Gateway NAT;](#Criat-Gateway-NAT;)
-  
-4.3 [Editar Tabela de Rotas;](#Editar-Tabela-de-Rotas;)
-  
-4.4 [Criar Security Groups;](#Criar-Security-Groups:)
-  
-4.5 [Criar RDS;](#Criar-RDS)
-  
-4.6 [Criar EFS;](#Criar-EFS)
-  
-4.7 [Criar Load Balancer;](#Criar-Load-Balancer;)
-  
-4.8 [Criar Auto Scaling;](#Criar-Auto-Scaling;)
-  
-4.9 [Criar Template;](#Criar-Template;)
-  
-4.10 [Teste de Funcionamento.](#Teste-de-funcionamento)
    
 5. [Considerações Finais](#considerações-finais)
 
@@ -109,14 +89,16 @@ Para armazenar arquivos estáticos, utiliza-se o AWS EFS, permitindo compartilha
 <div>
 <details align="left">
     <summary></summary>
+O primeiro passo do nosso projeto, é a criação de uma VPC.
 
-   Acesse o console da AWS e, na barra de pesquisa, procure por **VPC**. Em seguida, clique na opção **"Criar VPC"**. Na tela de configuração, selecione a alternativa **"VPC e muito mais"**. No campo de nome, insira um identificador de sua escolha. Caso deseje modificar alguma configuração, fique à vontade para ajustá-la conforme necessário. Utilize a imagem abaixo como referência para garantir que as configurações estejam corretas.
-
-   ![Image](https://github.com/user-attachments/assets/6fce6383-fef6-434b-b6e0-fb8b6ec5a05d)
+- Bloco CIDR IPv4: 10.0.0.0/16
+- Número de Zonas de Disponibilidade (AZs): 2
+- Sub-redes: 2 públicas e 2 privadas
+- Gateway NAT: 1 por AZ
 
 </div>
 
-   # 4.2 Criar Gateway Nat;
+   # 4.2 Grupo de Segurança
 
 <div>
 <details align="left">
@@ -126,54 +108,282 @@ Para armazenar arquivos estáticos, utiliza-se o AWS EFS, permitindo compartilha
 
    ![Image](https://github.com/user-attachments/assets/b5518534-bc79-4c88-899a-47c359d4707f)
 
+- sgGroup-loadbalancer:
+   HTTP / HTTPS => IPV4
+  
+- sgGroup-ec2:
+  HTTP / HTTPS => Load Balancer
+  SSH => Qualquer IP
+  
+- sgGroup-rds:
+  MySQL/Aurora => sgGroup-ec2
+  
+- sgGroup-efs:
+  NFS => sgGroup-ec2
+  
 </div>
 
-   # 4.3 Editar Tabela de Rotas;
+   # 4.3 RDS;
+
+<div>
+<details align="left">
+    <summary></summary>
+O Amazon RDS (Relational Database Service) facilita a configuração, manutenção e escalabilidade de bancos de dados relacionais. Para aumentar a segurança, é essencial utilizar grupos de sub-redes em sub-redes privadas, impedindo o acesso direto à internet e restringindo conexões apenas a instâncias autorizadas. Por esse motivo, o primeiro passo será a criação do grupo de sub-redes privadas.
+
+**Grupo de Sub-redes Privadas**
+- Vá em serviço RDS e acesse a aba "Grupos de sub-redes"
+- Clicar em Criar Grupo de sub-redes
+- Informações
+    Nome do Grupo: ___________
+    Descrição: _____________
+    VPC: Selecione a VPC que você criou
+- Selecionar as zonas de disponibilidas, em seguida, selecionar sub-redes privadas
+- Criar Grupo
+
+  **Configuração do RDS**
+
+- Tipo de banco de dados: MySQL (Nível gratuito).
+- Preencher Identificador da instância
+- Preencher nome do usuário Principal
+- Senha
+- Selecionar instância: db.t3.micro
+- Desative Backup e Cripografia para testes
+- Selecionar VPC Criada
+- Selecionar Grupo de sub-redes já criado
+- Não permitir acesso público
+- Adicionar Grupo de Segurança: sgGroup-rds
+- Nome do Banco de dados inicial: wordpress
+- Desmarcar escalabilidade automática de armazenamento
+
+**Ao criar o RDS, será gerado um IP, salve o IP para acessar o banco para adicionar no nosso arquivo user_data.sh**
+
+</div>
+
+   # 4.4 EFS;
 
 <div>
 <details align="left">
     <summary></summary>
 
-   Ainda no **Painel da VPC**, no menu lateral esquerdo, clique em **"Tabelas de Rotas"**. Em seguida, selecione a tabela de rotas associada à sua **rede privada**. Na parte inferior da tela, acesse a aba **"Rotas"** e clique em **"Editar Rotas"**. Escolha a opção **"Adicionar Rota"** e preencha os campos conforme a imagem de referência: no primeiro campo, insira **"0.0.0.0/0"**; no segundo, selecione **"Gateway NAT"**; e, logo abaixo, especifique o **Gateway NAT** criado anteriormente.
+- Nome: meuEFS
+- Selecionar VPC criada
+- Zonas de disponibilidade: selecionar sub-redes privadas 1 e 2
+- Selecionar grupo de segurança: sgGroup-efs
+- Após a criação, você vai acessar o comando de Anexar e "Usando o cliente do NFS"
+- Você vai ter que copiar e salvar o comando de montagem do sistema de arquivo Amazon EFS, localizado no arquivo user_data.sh
+- Como estamos utilizando Ubuntu, precisamos instalar o Rust para criar o processo de build do nosso EFS e permitir sua montagem em nossa instância.
 
-   ![Image](https://github.com/user-attachments/assets/24f8bd91-ac1d-4160-8a17-746c54c7c7d1)
-   
-Observação: Certifique-se de repetir esse procedimento para a outra sub-rede privada, garantindo que ambas tenham a rota corretamente configurada.
+**Instalação do EFS Utils**
+
+     sudo apt-get update
+     sudo apt-get -y install git binutils rustc cargo pkg-config libssl-dev
+     git clone https://github.com/aws/efs-utils
+     cd efs-utils
+     ./build-deb.sh
+     sudo apt-get -y install ./build/amazon-efs-utils*deb
+
+**Montagem do sistema de Arquivos**
+
+    sudo mkdir -p /mnt/efs
+    sudo mount -t efs -o tls fs-12345678:/ /mnt/efs
+
+Agora, ao criar um arquivo nesse diretório e acessá-lo a partir de outra instância conectada ao mesmo sistema de arquivos, o arquivo estará disponível em ambas.
 
 </div>
 
-   # 4.4 Criar Security Groups;
+# 4.5 EC2;
 
 <div>
 <details align="left">
     <summary></summary>
 
-   No console da AWS, utilize a barra de pesquisa para localizar **Security Groups** e clique na opção **"Criar grupo de segurança"**.  
-
-Antes de prosseguir, decida se utilizará um **Bastion Host (BH)**. Caso opte por usá-lo, siga a sequência normal de criação dos **Security Groups**. Caso contrário, pule a etapa referente ao **Security Group do BH** e ajuste as permissões de **SSH** na instância **EC2**.  
-
-### **Sequência recomendada para criação dos Security Groups:**  
-**Com Bastion Host (BH):**  
-1. Criar **Security Group do BH**  
-2. Criar **Security Group da EC2** (sem modificar as regras de saída)  
-3. Criar **Security Group do RDS**  
-4. Retornar ao **Security Group da EC2** e modificar as regras de saída conforme a imagem de referência  
-5. Criar **Security Group do EFS**  
-
-**Sem Bastion Host:**  
-1. Criar **Security Group da EC2** (sem modificar as regras de saída)  
-2. Criar **Security Group do RDS**  
-3. Retornar ao **Security Group da EC2** e modificar as regras de saída conforme a imagem de referência  
-4. Criar **Security Group do EFS**  
-
-**Observações:**  
-- Certifique-se de **associar cada Security Group à VPC criada anteriormente**.  
-- Os nomes e descrições dos Security Groups podem ser personalizados conforme sua preferência.  
-- As regras de entrada e saída devem seguir as configurações indicadas nas imagens de referência.
+- Nome e tags: Seguir o padrão da equipe.
+- Sistema operacional: Ubuntu.
+- Tipo de instância: Padrão.
+- Par de chaves: Criar ou reutilizar um existente.
+- Sub-redes:
+    Instância 1: Sub-rede privada 1.
+    Instância 2: Sub-rede privada 2.
+- Atribuir IP público automaticamente: Habilitado.
+- Grupo de segurança: sgGroup-ec2
+  
+**Em Configurações avançadas, adicione o user_data.sh.**
 
 </div>
 
+# 4.6 Load Balancer;
+
+<div>
+<details align="left">
+    <summary></summary>
+
+-Tipo: Classic Load Balancer.
+- Nome: MyLoadBalancer.
+- Mapeamento de rede: Sub-redes públicas.
+- Grupo de segurança: sgGroup-loadbalancer
+- Caminho de ping: /wp-admin/install.php (espera-se retorno com status 200).
+- Selecionar as duas instâncias que criamos privadas que criamos no tópico de EC2.
+
 </div>
+
+# 4.7 Auto Scaling;
+
+<div>
+<details align="left">
+    <summary></summary>
+
+Modelo de Execução (launch Template):
+
+- Tipo de instância: t2.micro
+- Tags e User Data: Mesmos das instâncias EC2 anteriores
+- Zonas de disponibilidade: Sub-redes privadas
+- Integração: Load Balancer existente
+- Demais configurações: Padrão
+
+Após configurar o Auto Scaling, uma nova instância será criada automaticamente, confirmando que o processo foi concluído com sucesso.
+
+</div>
+
+
+# 4.8 Validação dos sistemas de arquivos;
+
+<div>
+<details align="left">
+    <summary></summary>
+
+Foi criado um Bastion Host, um servidor que permite o acesso seguro a uma rede privada a partir da internet pública. Para isso, criaremos uma instância pública, nos conectaremos a ela via SSH e, estando dentro da nossa VPC, acessaremos outras instâncias privadas. Em uma dessas instâncias, criaremos um arquivo dentro da pasta EFS, chamado helloworld.txt
+
+**Instância 1 - EC2**
+
+- Criamos o arquivo na instância 1
+
+![Image](https://github.com/user-attachments/assets/41b9adeb-00fa-4e1e-88dc-e24aac2dc13d)
+
+**InstÂncia 2 - EC2**
+
+- Temos acesso ao arquivo criado na instância 1 que está presente no nosso sistema de arquivos.
+
+![Image](https://github.com/user-attachments/assets/570b9963-4005-4ee7-a062-4762339ddec9)
+
+</div>
+
+# 4.9 TESTE FINAL
+
+<div>
+<details align="left">
+    <summary></summary>
+
+Para verificar se tudo está operando corretamente, basta acessar o DNS do Load Balancer e estabelecer a conexão com o projeto. Caso a página exibida corresponda à imagem abaixo, significa que seu serviço foi implementado com sucesso.
+
+![Image](https://github.com/user-attachments/assets/84da9c4f-0ffd-4b6a-aa70-d64b8916e04b)
+
+</div>
+
+# 4.10 Arquivos e Códigos
+
+<div>
+<details align="left">
+    <summary></summary>
+
+    #!/bin/bash
+
+    # Atualiza o sistema e instala dependências
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y docker.io
+    sudo apt-get install -y mysql-client
+
+    sudo apt install -y nfs-common
+
+## Montagem para Linux 
+    sudo apt-get -y install git binutils rustc cargo pkg-config libssl-dev
+    git clone https://github.com/aws/efs-utils
+    cd efs-utils
+    ./build-deb.sh
+    sudo apt-get -y install ./build/amazon-efs-utils*deb
+
+# Cria o diretório efs 
+    sudo mkdir -p /mnt/efs
+
+    sudo mount -t efs -o tls fs-(id):/ efs
+
+# Instalar docker-compose
+    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+
+# Adicionar usuário ao grupo docker
+    sudo usermod -aG docker $USER
+    newgrp docker
+
+# Configura o diretório para o projeto WordPress
+    PROJECT_DIR=/home/ubuntu/wordpress
+    sudo mkdir -p $PROJECT_DIR
+    sudo chown -R $USER:$USER $PROJECT_DIR
+    cd $PROJECT_DIR
+
+# Cria o arquivo docker-compose.yml
+    sudo tee docker-compose.yml > /dev/null <<EOL
+    version: '3.8'
+
+    services:
+      wordpress:
+        image: wordpress:latest
+        container_name: {name}
+        ports:
+          - "80:80"
+        environment:
+          WORDPRESS_DB_HOST: {host}
+          WORDPRESS_DB_USER: {user}
+          WORDPRESS_DB_PASSWORD: {senha}
+          WORDPRESS_DB_NAME: wordpress
+        volumes:
+          - /mnt/efs:/var/www/html
+
+EOL
+
+# Inicia o Docker Compose
+    docker-compose up -d
+
+# Aguarda o container WordPress estar ativo
+    echo "Aguardando o container WordPress iniciar..."
+    until sudo docker ps | grep -q "Up.*wordpress"; do
+      echo "Verificando containers em execução..."
+      sudo docker ps
+      sleep 5
+    done
+    echo "Container WordPress iniciado!"
+
+
+# Adiciona o arquivo healthcheck.php no container WordPress
+    echo "Criando o arquivo healthcheck.php no container WordPress..."
+    sudo docker exec -i wordpress bash -c "cat <<EOF > /var/www/html/healthcheck.php
+    <?php
+    http_response_code(200);
+    header('Content-Type: application/json');
+    echo json_encode([\"status\" => \"OK\", \"message\" => \"Health check passed\"]);
+    exit;
+    ?>
+
+EOF
+
+# Confirma a criação do arquivo
+    if docker exec -i wordpress ls /var/www/html/healthcheck.php > /dev/null 2>&1; then
+      echo "Arquivo healthcheck.php criado com sucesso!"
+    else
+      echo "Falha ao criar o arquivo healthcheck.php."
+    fi
+
+</div>
+
+
+
+
+
+
+
+
+  
+
    
 
    
