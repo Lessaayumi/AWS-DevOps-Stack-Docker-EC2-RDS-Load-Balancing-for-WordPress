@@ -378,6 +378,8 @@ EOF
 
 </div>
 
+</div>
+
 # 5. Considerações finais
 
 <div>
@@ -388,9 +390,6 @@ Este projeto demonstrou a implementação de uma infraestrutura escalável e alt
 
 </div>
 
-</div>
-
-</div>
 
 # 6. Referências
 
