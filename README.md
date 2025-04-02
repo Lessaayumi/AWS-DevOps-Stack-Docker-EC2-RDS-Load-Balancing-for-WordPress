@@ -390,6 +390,8 @@ Este projeto demonstrou a implementação de uma infraestrutura escalável e alt
 
 </div>
 
+</div>
+
 # 6. Referências
 
 <div>
