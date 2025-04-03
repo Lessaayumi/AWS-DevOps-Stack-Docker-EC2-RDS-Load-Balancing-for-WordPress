@@ -2,6 +2,8 @@
 
 Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (MySQL), EFS e Classic Load Balancer. O *user_data.sh* automatiza a configuração, garantindo escalabilidade e alta disponibilidade. A abordagem segue boas práticas de DevOps, permitindo implantação eficiente e reprodutível.
 
+----------------------------------------------------------------------------------------
+
 ## Índice
 
 1. [Resumo](#resumo)
@@ -11,7 +13,28 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 3. [Arquitetura do Projeto e Tecnologias](#arquitetura-do-projeto-e-tecnologias)
 
 4. [Criação da Infraestrutura na AWS](#criação-da-infraestrutura-na-aws)
-   
+
+   4.1. [Criar VPC](#Criar-VPC)
+
+   4.2. [Grupo de Segurança](#Grupo-de-Segurança)
+
+   4.3. [RDS](#RDS)
+
+   4.4. [EFS](#EFS)
+
+   4.5. [EC2](#EC2)
+
+   4.6. [Load Balancer](#Load-Balancer)
+
+   4.7. [Auto Scaling](#Auto-Scaling)
+
+   4.8. [Validação dos sistemas de arquivos](#Validação-dos-sistemas-de-arquivos)
+
+   4.9. [Teste Final](#Teste-final)
+
+   4.10. [Arquivos e Códigos](#Arquivos-e-Códigos)
+
+  
 5. [Considerações Finais](#considerações-finais)
 
 6. [Referências](#referências)
@@ -243,15 +266,28 @@ Agora, ao criar um arquivo nesse diretório e acessá-lo a partir de outra inst�
 <details align="left">
     <summary></summary>
 
-Modelo de Execução (launch Template):
+- Modelo de Execução (launch Template):
 
-- Tipo de instância: t2.micro
-- Tags e User Data: Mesmos das instâncias EC2 anteriores
-- Zonas de disponibilidade: Sub-redes privadas
-- Integração: Load Balancer existente
-- Demais configurações: Padrão
+### Configuração do Launch Template  
+1. No menu lateral, acesse **Launch Templates** e clique em **Create launch template**.  
+2. Defina um **nome** e uma **descrição** para o template.  
+3. Escolha a **Amazon Linux 2023 AMI** e selecione a instância **t2.micro** para manter a compatibilidade com as anteriores.  
+4. Associe a **chave SSH (.pem)** e o **Security Group padrão**.  
+5. Inclua as **tags** necessárias para organização e identificação.  
+6. Insira o **script de User Data**, realizando as adaptações conforme necessário.  
+7. Finalize a configuração clicando em **Create launch template**.  
 
-Após configurar o Auto Scaling, uma nova instância será criada automaticamente, confirmando que o processo foi concluído com sucesso.
+### Configuração do Auto Scaling Group  
+1. No menu lateral, vá para **Auto Scaling Groups** e clique em **Create Auto Scaling group**.  
+2. Escolha o **Launch Template** criado na etapa anterior.  
+3. Selecione a **VPC** e as **duas sub-redes públicas** correspondentes.  
+4. Associe o **Load Balancer** configurado previamente e habilite a opção **Turn on Elastic Load Balancing health checks**.  
+5. Defina a **capacidade de escalonamento**:  
+   - **Capacidade desejada:** 2  
+   - **Capacidade mínima:** 2  
+   - **Capacidade máxima:** 4  
+6. Ative a **Target tracking scaling policy** e ajuste o **Target value** para **80**.  
+7. Siga as próximas etapas e conclua a configuração clicando em **Create Auto Scaling group**.
 
 </div>
 
@@ -290,36 +326,7 @@ Para verificar se tudo está operando corretamente, basta acessar o DNS do Load 
 
 </div>
 
-# 4.10 Auto Scaling Group
-
-<div>
-<details align="left">
-    <summary></summary>
-
-### Configuração do Launch Template  
-1. No menu lateral, acesse **Launch Templates** e clique em **Create launch template**.  
-2. Defina um **nome** e uma **descrição** para o template.  
-3. Escolha a **Amazon Linux 2023 AMI** e selecione a instância **t2.micro** para manter a compatibilidade com as anteriores.  
-4. Associe a **chave SSH (.pem)** e o **Security Group padrão**.  
-5. Inclua as **tags** necessárias para organização e identificação.  
-6. Insira o **script de User Data**, realizando as adaptações conforme necessário.  
-7. Finalize a configuração clicando em **Create launch template**.  
-
-### Configuração do Auto Scaling Group  
-1. No menu lateral, vá para **Auto Scaling Groups** e clique em **Create Auto Scaling group**.  
-2. Escolha o **Launch Template** criado na etapa anterior.  
-3. Selecione a **VPC** e as **duas sub-redes públicas** correspondentes.  
-4. Associe o **Load Balancer** configurado previamente e habilite a opção **Turn on Elastic Load Balancing health checks**.  
-5. Defina a **capacidade de escalonamento**:  
-   - **Capacidade desejada:** 2  
-   - **Capacidade mínima:** 2  
-   - **Capacidade máxima:** 4  
-6. Ative a **Target tracking scaling policy** e ajuste o **Target value** para **80**.  
-7. Siga as próximas etapas e conclua a configuração clicando em **Create Auto Scaling group**.
-
-</div>
-
-# 4.11 Arquivos e Códigos
+# 4.10 Arquivos e Códigos
 
 <div>
 <details align="left">
