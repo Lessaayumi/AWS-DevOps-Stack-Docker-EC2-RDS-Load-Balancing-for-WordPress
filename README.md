@@ -1,4 +1,4 @@
-# AWS DevOps Stack: Docker, EC2, RDS and Load Balancing for WordPress. (NOVO USANDO OQUE O DAVI MANDOU, UNICO JEITO FOI POR A PORRA DE BAST HOST E REPLICAR A INSTANCIA, ESTA FALTANDO A MERDA DAS IMAGENS E A PORRA DO CLOUD WATCH QUE NÃO FUNCIONA AGORA)
+# AWS DevOps Stack: Docker, EC2, RDS and Load Balancing for WordPress
 
 Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (MySQL), EFS e Classic Load Balancer. O *user_data.sh* automatiza a configuração, garantindo escalabilidade e alta disponibilidade. A abordagem segue boas práticas de DevOps, permitindo implantação eficiente e reprodutível.
 
@@ -96,6 +96,8 @@ O primeiro passo do nosso projeto, é a criação de uma VPC.
 - Sub-redes: 2 públicas e 2 privadas
 - Gateway NAT: 1 por AZ
 
+![Image](https://github.com/user-attachments/assets/d43ae5a7-c776-4a4e-a702-0b75bec78872)
+
 </div>
 
    # 4.2 Grupo de Segurança
@@ -113,12 +115,18 @@ O primeiro passo do nosso projeto, é a criação de uma VPC.
 - sgGroup-ec2:
   HTTP / HTTPS => Load Balancer
   SSH => Qualquer IP
+
+  ![Image](https://github.com/user-attachments/assets/49ec7c02-c728-4728-ad4f-bff4f5cb425f)
   
 - sgGroup-rds:
   MySQL/Aurora => sgGroup-ec2
+
+  ![Image](https://github.com/user-attachments/assets/ce118c58-313c-4c45-864c-1e4c70ac1cfa)
   
 - sgGroup-efs:
   NFS => sgGroup-ec2
+
+  ![Image](https://github.com/user-attachments/assets/de5eb788-e645-4b44-ae77-985e7b2086a9)
   
 </div>
 
@@ -282,7 +290,36 @@ Para verificar se tudo está operando corretamente, basta acessar o DNS do Load 
 
 </div>
 
-# 4.10 Arquivos e Códigos
+# 4.10 Auto Scaling Group
+
+<div>
+<details align="left">
+    <summary></summary>
+
+### Configuração do Launch Template  
+1. No menu lateral, acesse **Launch Templates** e clique em **Create launch template**.  
+2. Defina um **nome** e uma **descrição** para o template.  
+3. Escolha a **Amazon Linux 2023 AMI** e selecione a instância **t2.micro** para manter a compatibilidade com as anteriores.  
+4. Associe a **chave SSH (.pem)** e o **Security Group padrão**.  
+5. Inclua as **tags** necessárias para organização e identificação.  
+6. Insira o **script de User Data**, realizando as adaptações conforme necessário.  
+7. Finalize a configuração clicando em **Create launch template**.  
+
+### Configuração do Auto Scaling Group  
+1. No menu lateral, vá para **Auto Scaling Groups** e clique em **Create Auto Scaling group**.  
+2. Escolha o **Launch Template** criado na etapa anterior.  
+3. Selecione a **VPC** e as **duas sub-redes públicas** correspondentes.  
+4. Associe o **Load Balancer** configurado previamente e habilite a opção **Turn on Elastic Load Balancing health checks**.  
+5. Defina a **capacidade de escalonamento**:  
+   - **Capacidade desejada:** 2  
+   - **Capacidade mínima:** 2  
+   - **Capacidade máxima:** 4  
+6. Ative a **Target tracking scaling policy** e ajuste o **Target value** para **80**.  
+7. Siga as próximas etapas e conclua a configuração clicando em **Create Auto Scaling group**.
+
+</div>
+
+# 4.11 Arquivos e Códigos
 
 <div>
 <details align="left">
