@@ -34,7 +34,7 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 
    4.10. [Arquivos e Códigos](#Arquivos-e-Códigos)
 
-   4.11. [Etapa Opcional: Instalação Manual](#Etapa-Opcional:-Instalação-Manual)
+   4.11. [Etapa Opcional, instalação Manual](#Etapa-Opcional,-Instalação-Manual)
   
 6. [Considerações Finais](#considerações-finais)
 
@@ -120,12 +120,28 @@ Para armazenar arquivos estáticos, utiliza-se o AWS EFS, permitindo compartilha
    
 O primeiro passo do nosso projeto, é a criação de uma VPC. ( Caso tenha dúvida como criar uma VPC acesse o repositório: https://github.com/Lessaayumi/Nginx-EC2-VPC-Setup-with-Automated-Webhooks )
 
+![Image](https://github.com/user-attachments/assets/43a1ef68-05c1-404b-8e55-11ae5b421c51)
+
 - Bloco CIDR IPv4: 10.0.0.0/16
 - Número de Zonas de Disponibilidade (AZs): 2
 - Sub-redes: 2 públicas e 2 privadas
 - Gateway NAT: 1 por AZ
 
 ![Image](https://github.com/user-attachments/assets/d43ae5a7-c776-4a4e-a702-0b75bec78872)
+
+**Observação: Caso o Gateway Nat não tenha sido criado siga os procediementos abaixo:**
+
+   No **Painel da VPC**, localizado no menu lateral esquerdo, clique na opção **"Gateways NAT"** e, em seguida, selecione **"Criar gateway NAT"**. No campo de nome, defina um identificador para o gateway. Escolha a **sub-rede pública** correspondente e mantenha a configuração padrão **"Público"** no campo **"Tipo de conectividade"**. Para concluir o processo, clique na opção **"Alocar IP elástico"**.
+
+![Image](https://github.com/user-attachments/assets/2c6ee439-863d-4bab-a893-f5a2c6604a48)
+
+**Editar tabela de rotas**
+
+Também na aba "Painel da VPC" na lateral esquerda clique em "Tabelas de Rotas" -> Selecione uma rede privada, na parte inferior, clique onde está escrito "Rotas" -> "Editar Rotas" -> "Adicionar Rota", preencha conforme a imagem abaixo, primeiro retangulo é "0.0.0.0" depois "Gateway NAT" e em baixo o gateway criado anteriormente.
+
+![Image](https://github.com/user-attachments/assets/ec35a89e-365c-45e3-90c6-788ed4fafb88)
+
+**OBS: Lembre-se de fazer isso na outra sub-rede privada também.**
 
 </div>
 
@@ -135,28 +151,53 @@ O primeiro passo do nosso projeto, é a criação de uma VPC. ( Caso tenha dúvi
 <details align="left">
     <summary></summary>
 
-   No **Painel da VPC**, localizado no menu lateral esquerdo, clique na opção **"Gateways NAT"** e, em seguida, selecione **"Criar gateway NAT"**. No campo de nome, defina um identificador para o gateway. Escolha a **sub-rede pública** correspondente e mantenha a configuração padrão **"Público"** no campo **"Tipo de conectividade"**. Para concluir o processo, clique na opção **"Alocar IP elástico"**.
+Pesquise por Security groups -> "Criar grupo de segurança"
 
+![Image](https://github.com/user-attachments/assets/8084fe73-71b1-4964-b665-1e5dbba6f9ac)
 
-- sgGroup-loadbalancer:
-   HTTP / HTTPS => IPV4
-  
-- sgGroup-ec2:
-  HTTP / HTTPS => Load Balancer
-  SSH => Qualquer IP
+Primeiro decida se vai criar um Bastion Host¹ ou não, caso opte por sim, siga normalmente, caso não pule o Security Group "BH" e siga com a criação dos demais, mas lembrese de mudar a questão da SSH na EC2.
+Outra observação, a sequência para criar os security group sem problema é BH -> EC2 (mas sem mexer nas regras de saída) -> RDS -> EC2 (alterar as regras de saída para ficar igual das imagens) -> EFS.
+Caso opte por não usar o BH, faça EC2 (sem mexer nas regras de saída) -> RDS -> EC2 (alterar as regras de saída) -> EFS.
 
-  ![Image](https://github.com/user-attachments/assets/49ec7c02-c728-4728-ad4f-bff4f5cb425f)
-  
-- sgGroup-rds:
-  MySQL/Aurora => sgGroup-ec2
+**Bastion Host¹**: O Bastion Host é um servidor intermediário projetado para fornecer acesso seguro a recursos em uma rede privada, reduzindo a superfície de ataque e melhorando a segurança.
 
-  ![Image](https://github.com/user-attachments/assets/ce118c58-313c-4c45-864c-1e4c70ac1cfa)
-  
-- sgGroup-efs:
-  NFS => sgGroup-ec2
+- **BH (OPCIONAL)**
+Regras:
 
-  ![Image](https://github.com/user-attachments/assets/de5eb788-e645-4b44-ae77-985e7b2086a9)
-  
+![Image](https://github.com/user-attachments/assets/c3746a40-c68e-4b9e-b91f-4bed7e901e1a)
+
+- **EC2**
+Regras:
+
+![Image](https://github.com/user-attachments/assets/dbc17f95-d5c1-4363-ae60-52d1a5689bcd)
+
+- **RDS**
+Regras:
+
+![Image](https://github.com/user-attachments/assets/aeaa4b05-67b8-4017-bfed-bef0978e0574)
+
+- **EFS**
+Regras:
+
+![Image](https://github.com/user-attachments/assets/fb11a259-ec48-4b8f-a199-24cb54049eb0)
+
+**Subir EC2 pública para Bastion Host (Opcional):** 
+
+Pesquise EC2 -> "Executar Instância"
+
+- Adicione as Tags necessarias;
+- Selecione a AMI: Amazon Linux 2;
+- Tipo de instância: t2.micro;
+- Selecione o seu par de chaves;
+- Configurações de rede:
+- Rede: VPC criada;
+- Sub-rede: uma subrede pública;
+- Atribuir IP público automaticamente: Habilitar;
+- Firewall (grupos de segurança): -> Selecionar grupo de segurança existente -> Selecione o "SG-BH-Desafio02";
+- Pode criar sua instância que servira de Bastion Host já.
+
+**Ir para o passo 4.10**
+
 </div>
 
    # 4.3 RDS;
