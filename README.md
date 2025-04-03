@@ -34,8 +34,7 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 
    4.10. [Arquivos e Códigos](#Arquivos-e-Códigos)
 
-   4.11. [Etapa Alternativa: Instalação Manual do WordPress](#Etapa-Alternativa:-Instalação-Manual-do-WordPress)
-
+   4.11. [Etapa Opcional: Instalação Manual](#Etapa-Opcional:-Instalação-Manual)
   
 6. [Considerações Finais](#considerações-finais)
 
@@ -429,7 +428,7 @@ EOF
 
 </div>
 
-## 4.11. Etapa Alternativa: Instalação Manual do WordPress 
+## 4.11. Etapa Opcional: Instalação Manual
 
 <div>
 <details align="left">
