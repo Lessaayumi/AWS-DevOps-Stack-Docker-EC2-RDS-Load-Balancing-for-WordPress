@@ -307,7 +307,7 @@ Agora, ao criar um arquivo nesse diretório e acessá-lo a partir de outra inst�
 
 </div>
 
-# 4.7 Auto Scaling;
+# 4.7 Auto Scaling e CloudWatch;
 
 <div>
 <details align="left">
@@ -598,6 +598,11 @@ Este projeto demonstrou a implementação de uma infraestrutura escalável e alt
 https://docs.aws.amazon.com/efs/latest/ug/API_Operations.html - Acessso 30 de Março de 2025.
 
 https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html - Acesso 30 de Março de 2025.
+
+https://docs.aws.amazon.com/pt_br/efs/latest/ug/installing-amazon-efs-utils.html - Acesso 29 de Março de 2025
+
+https://docs.aws.amazon.com/pt_br/efs/latest/ug/installing-amazon-efs-utils.html - Acesso 29 de Março de 2025.
+
 
 </div>
 
