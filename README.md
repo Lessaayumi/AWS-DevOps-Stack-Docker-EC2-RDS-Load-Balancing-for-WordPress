@@ -34,10 +34,12 @@ Este projeto implanta WordPress com Docker em uma VPC na AWS, usando EC2, RDS (M
 
    4.10. [Arquivos e Códigos](#Arquivos-e-Códigos)
 
-  
-5. [Considerações Finais](#considerações-finais)
+   4.11. [Etapa Alternativa: Instalação Manual do WordPress](#Etapa-Alternativa:-Instalação-Manual-do-WordPress)
 
-6. [Referências](#referências)
+  
+6. [Considerações Finais](#considerações-finais)
+
+7. [Referências](#referências)
 
 
 ----------------------------------------------------------------------------------------
@@ -78,20 +80,24 @@ A escalabilidade foi um fator essencial no projeto, sendo implementado um Auto S
    ![Image](https://github.com/user-attachments/assets/e1cf6ff8-f0d6-4727-ba68-9a460841d43f)
 
    **Tecnologias**
-   . Provisionamento da Instância EC2
+   - Provisionamento da Instância EC2:
+   
    AWS EC2: Máquinas virtuais na AWS para hospedar os containers.
    User Data (user_data.sh): Script para automação da instalação do Docker na inicialização da instância.
    Docker: Engine para criação e gerenciamento dos containers.
 
-   . Deploy do Wordpress em Containers
+   - Deploy do Wordpress em Containers:
+   
    Dockerfile / Docker Compose: Arquivo de configuração para criação e gerenciamento dos containers do WordPress e MySQL.
    WordPress Container: Aplicação principal rodando como container.
    AWS RDS (MySQL): Banco de dados gerenciado para armazenar os dados do WordPress.
 
-   . Armazenamento e Arquivos Estáticos
+   - Armazenamento e Arquivos Estáticos:
+   
    AWS EFS (Elastic File System): Sistema de arquivos distribuído para armazenar arquivos estáticos do WordPress.
 
-   . Balanceamento de Carga e Configuração de Rede
+   - Balanceamento de Carga e Configuração de Rede:
+   
    AWS Load Balancer (Classic Load Balancer - CLB): Para gerenciar o tráfego e distribuir conexões entre múltiplas instâncias de WordPress.
    VPC Privada: Para garantir que o WordPress não exponha um IP público diretamente.
    Regras de Segurança (Security Groups): Configuração para permitir tráfego somente pelo Load Balancer.
@@ -112,7 +118,8 @@ Para armazenar arquivos estáticos, utiliza-se o AWS EFS, permitindo compartilha
 <div>
 <details align="left">
     <summary></summary>
-O primeiro passo do nosso projeto, é a criação de uma VPC.
+   
+O primeiro passo do nosso projeto, é a criação de uma VPC. ( Caso tenha dúvida como criar uma VPC acesse o repositório: https://github.com/Lessaayumi/Nginx-EC2-VPC-Setup-with-Automated-Webhooks )
 
 - Bloco CIDR IPv4: 10.0.0.0/16
 - Número de Zonas de Disponibilidade (AZs): 2
@@ -419,6 +426,113 @@ EOF
     else
       echo "Falha ao criar o arquivo healthcheck.php."
     fi
+
+</div>
+
+## 4.11. Etapa Alternativa: Instalação Manual do WordPress 
+
+<div>
+<details align="left">
+    <summary></summary>
+   
+Caso prefira instalar o WordPress manualmente, siga os passos abaixo:
+
+1. **Acesso à Instância EC2 via SSH**
+- Acesse a instância via SSH utilizando o **Visual Studio Code**: 
+  - Selecione a instância e clique em **Connect**. 
+  - Copie o comando SSH exbido e cole-o no terminal do VS Code. Substitua `"nome_da_chave"` pelo caminho correto da chave SSH.
+
+2. **Instalação do Docker**
+- Atualize os pacotes da instância:
+
+  ```bash
+    sudo yum update -y
+  ```
+
+- Instale o Docker:
+
+  ```bash
+  sudo yum install -y docker
+  ```
+
+- Inicie o Docker:
+
+  ```bash
+  sudo service docker start
+  ```
+
+- Adicione o `ec2-user` ao grupo do Docker, para que os comandos sejam executados sem o uso do `sudo`:
+
+  ```bash
+  sudo usermod -a -G docker ec2-user
+  ```
+
+- Efetue logout e login novamente para aplicar as permissões e verifique a instalação:
+
+  ```bash
+  docker ps
+  ```
+
+3. **Instalação do Docker Compose**
+- Instale o Docker Compose:
+
+  ```bash
+  sudo curl -SL https://github.com/docker/compose/releases/download/v2.34.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+  sudo chmod +x /usr/local/bin/docker-compose
+  ```
+
+- Verifique a instalação:
+
+  ```bash
+  docker-compose --version
+  ```
+
+4. **Configuração do Ponto de Montagem**
+- Instale o cliente Amazon EFS:
+
+  ```bash
+  sudo yum install -y amazon-efs-utils
+  ```
+
+- Crie o ponto de montagem:
+
+  ```bash
+  sudo mkdir efs
+  ```
+
+- Monte o EFS:
+
+  ```bash
+  sudo mount -t efs <efs file-system-id>:/ /home/ec2-user/efs/
+  ```
+
+- Use o ID do sistema de arquivos que você está montando no local `<efs file-system-id>`.
+
+5. **Instalação do WordPress**
+- Baixe a imagem oficial do WordPress:
+
+  ```bash
+  docker pull wordpress
+  ```
+
+- Crie um diretório para o projeto:
+
+  ```bash
+  mkdir projeto-docker
+  cd projeto-docker
+  ```
+
+- Crie o arquivo `docker-compose.yml` usando o script que está neste repositório e configure as variáveis de ambiente:
+
+  ```bash
+  nano docker-compose.yml
+  ```
+
+- Execute o WordPress com Docker Compose:
+
+  ```bash
+  docker-compose up -d
+  ```
 
 </div>
 
